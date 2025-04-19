@@ -1,84 +1,44 @@
-# SENTIMENT-ANALYSIS
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import re
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+SENTIMENT_ANALYSIS
+Welcome! This project demonstrates a basic Sentiment Analysis pipeline built using the Sentiment140 dataset. The goal is to classify tweets as either positive or negative based on their textual content using Logistic Regression.
 
-# Load dataset with proper error handling
-df = pd.read_csv('/content/orginial_data.csv.csv',
-                 encoding='latin-1',
-                 header=None,
-                 engine='python',
-                 on_bad_lines='skip')
+📌 Project Overview In this project, we:
 
-# Assign column names
-df.columns = ['target', 'ids', 'date', 'flag', 'user', 'text']
+Load and preprocess the Sentiment140 dataset
 
-# Convert target values: 4 (positive) -> 1, 0 stays 0
-df['target'] = df['target'].apply(lambda x: 1 if x == 4 else 0)
+Clean the tweet text to reduce noise
 
-# Clean the tweet text
-def clean_tweet(tweet):
-    tweet = re.sub(r"http\S+", "", tweet)  # remove URLs
-    tweet = re.sub(r"@\w+", "", tweet)     # remove mentions
-    tweet = re.sub(r"#\w+", "", tweet)     # remove hashtags
-    tweet = re.sub(r"[^a-zA-Z\s]", "", tweet)  # keep only letters
-    tweet = tweet.lower().strip()  # lowercase and strip whitespace
-    return tweet
+Use TF-IDF for feature extraction
 
-df['text'] = df['text'].apply(clean_tweet)
+Train a Logistic Regression model
 
-# Sample a subset for faster training (~200k rows)
-df = df.sample(n=200000, random_state=42)
+Evaluate model performance using accuracy, classification report, and confusion matrix
 
-# Visualize class distribution
-sns.countplot(x='target', data=df)
-plt.title('Sentiment Distribution')
-plt.xlabel('Sentiment')
-plt.ylabel('Count')
-plt.show()
+📁 Dataset Source: https://www.google.com/url?q=https://www.kaggle.com/datasets/kazanova/sentiment140&sa=D&source=editors&ust=1745057332296059&usg=AOvVaw3ketJYTpX9ArehEVFiTr7l
 
-# Train-test split (50-50)
-train_df, test_df = train_test_split(
-    df,
-    test_size=0.5,
-    stratify=df['target'],
-    random_state=42
-)
+The dataset consists of 1.6 million tweets labeled as either 0 (negative) or 4 (positive).
 
-# Features and labels
-X_train = train_df['text']
-y_train = train_df['target']
-X_test = test_df['text']
-y_test = test_df['target']
+We convert 4 → 1 to make it a binary classification problem.
 
-# TF-IDF vectorizer (with bigrams)
-vectorizer = TfidfVectorizer(stop_words='english', max_features=10000, ngram_range=(1, 2))
-X_train_tfidf = vectorizer.fit_transform(X_train)
-X_test_tfidf = vectorizer.transform(X_test)
+⚙ Steps in the Pipeline Loading the Dataset Using pandas, we import the CSV data and assign appropriate column names.
 
-# Train logistic regression
-model = LogisticRegression(max_iter=1000, C=1.0)
-model.fit(X_train_tfidf, y_train)
+Cleaning Tweets A custom function is used to remove:
 
-# Predict and evaluate
-y_pred = model.predict(X_test_tfidf)
-accuracy = accuracy_score(y_test, y_pred)
+URLs, mentions, hashtags
 
-print(f"Accuracy: {accuracy:.4f}")  # Expected: ~0.8600
+Special characters and numbers
 
-# Detailed performance metrics
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred, target_names=["Negative", "Positive"]))
+Text is converted to lowercase
 
-# Confusion Matrix
-cm = confusion_matrix(y_test, y_pred)
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Negative', 'Positive'], yticklabels=['Negative', 'Positive'])
-plt.title('Confusion Matrix')
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
-plt.show()
+Sampling and Visualization To manage processing time, we sample 200,000 tweets. Sentiment distribution is visualized using seaborn.
+
+Train-Test Split Data is split into 50% training and 50% testing, maintaining class balance via stratification.
+
+TF-IDF Vectorization We use TF-IDF (including bigrams) to convert text into numerical features for training.
+
+Model Training We train a Logistic Regression classifier using Scikit-learn.
+
+Model Evaluation The model achieves an accuracy of ~86%. We also display:
+
+Classification report
+
+Confusion matrix
